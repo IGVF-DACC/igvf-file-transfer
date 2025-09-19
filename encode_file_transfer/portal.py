@@ -125,7 +125,7 @@ class EncodePortalHelper():
                     'upload_status': self.file_metadata_upload_statuses,
                     'controlled_access!': 'true',
                     'externally_hosted!': 'true',
-                    #'audit.INTERNAL_ACTION.category!': 'incorrect file bucket',
+                    'audit.INTERNAL_ACTION.category!': 'incorrect file bucket',
                 },
                 doseq=True
             )

@@ -24,8 +24,6 @@ from .portal import EncodePortalHelper
 def logger(filename):
     log = logging.getLogger()
     log.setLevel(logging.WARN)
-#    log.addHandler(logging.StreamHandler())
-#    log.addHandler(logging.FileHandler(filename))
     return log
 
 
