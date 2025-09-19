@@ -47,7 +47,6 @@ FILE_METADATA_FIELDS = [
     'assembly',
     'transcriptome_annotation',
     'controlled_access',
-    'anvil_url',
     'md5sum',
     'derived_from',
     'status',

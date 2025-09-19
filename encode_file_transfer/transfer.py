@@ -272,7 +272,7 @@ class EncodeFileTransfer():
         df = pd.DataFrame(parsed_metadata)
         df = df.sort_values(
             by=[
-                'dataset',
+                'file_set.accession',
                 'assembly',
                 'file_format'
             ]
