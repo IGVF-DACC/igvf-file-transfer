@@ -70,11 +70,17 @@ class s3Helper():
             raise e
         return True
 
-    def _move_file(self, file_to_move):
+    def _move_file(self, file_to_move, initial_transfer=False):
         '''
         Move file from source bucket to destination bucket.
         '''
         sb, sk, db, dk = self._parse_file_to_move(file_to_move)
+        if initial_transfer is True:
+            # Check if file already exists in destination (previously bulk copied).
+            # Skip redundant copy.
+            if self._file_exists(db, dk):
+                log.warning('Initial flag and file already found in destination bucket. Skipping move!')
+                return True
         if sb == db and sk == dk:
             log.warning('Source and destination same. Skipping move!')
             return True
@@ -306,16 +312,13 @@ class EncodeFileTransfer():
                         datetime.now()
                     )
                 )
-                if self.initial_transfer:
-                    # Try to set source to encode-public.
-                    f = self._set_source_to_encode_public(f)
                 # Check for previous incomplete transfers.
                 f = self._determine_source(f)
                 # The file doesn't exist in any bucket, so skip and clean up audit later.
                 if not f:
                     continue
                 # Move file to destination.
-                self.s3h._move_file(f)
+                self.s3h._move_file(f, self.initial_transfer)
                 # Tag original file for glacier storage.
                 self.s3h._tag_file(f)
                 # Delete file from source.
