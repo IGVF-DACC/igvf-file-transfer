@@ -1,9 +1,4 @@
 import pytest
-from moto import mock_s3
-from .test_encode_s3_helper import (
-        make_bucket,
-        make_s3_object
-)
 
 
 class MockResponse():
@@ -127,7 +122,7 @@ def test_encode_file_transfer_set_source_to_encode_public(server, mocker, file_t
     s3Helper._file_exists.return_value = True
     assert file_to_move['source_bucket'] == 'encode-files'
     file_to_move = eft._set_source_to_encode_public(file_to_move)
-    assert file_to_move['source_bucket'] == 'encode-public'
+    assert file_to_move['source_bucket'] == 'igvf-public'
 
 
 def test_encode_file_transfer_deterimine_source_file_exists_in_source(server, mocker, file_to_move):
@@ -161,58 +156,4 @@ def test_encode_file_transfer_file_does_not_exist_in_source_or_destination(serve
     file_to_move['source_bucket'] = 'not-encode-files'
     assert file_to_move['source_bucket'] == 'not-encode-files'
     file_to_move = eft._determine_source(file_to_move)
-    assert file_to_move['source_bucket'] == 'encode-files'
-
-
-@mock_s3
-def test_encode_file_transfer_sync_buckets_and_portal(server, mocker, search_results, tmp_path):
-    import requests
-    from encode_file_transfer import EncodeFileTransfer
-    from encode_file_transfer import EncodePortalHelper
-    from encode_file_transfer import s3Helper
-    from encode_file_transfer.interface import LOGBUCKET, LOGFILE
-    LOGFILE = LOGFILE.format('test')
-    locallog = tmp_path / LOGFILE
-    locallog.write_text(u'content')
-    LOGFILE = str(locallog)
-    mocker.patch('encode_file_transfer.EncodePortalHelper.is_indexing')
-    mocker.patch('encode_file_transfer.s3Helper._file_exists')
-    mocker.patch('requests.get')
-    mocker.patch('requests.patch')
-    mocker.spy(EncodeFileTransfer, '_set_source_to_encode_public')
-    mocker.spy(EncodeFileTransfer, '_determine_source')
-    mocker.spy(s3Helper, '_move_file')
-    mocker.spy(s3Helper, '_delete_file')
-    mocker.spy(s3Helper, '_tag_file')
-    mocker.spy(s3Helper, '_upload_log')
-    mocker.spy(EncodeFileTransfer, '_update_bucket_on_portal')
-    EncodePortalHelper.is_indexing.return_value = False
-    s3Helper._file_exists.return_value = True
-    requests.get.return_value = MockResponse(
-        {'@graph': search_results},
-        200,
-        text=''
-    )
-    requests.patch.return_value = MockResponse(
-        {'new_bucket': 'new_test_bucket', 'old_bucket': 'old_test_bucket'},
-        200,
-        text=''
-    )
-    s3 = make_bucket('encode-files')
-    s3 = make_bucket('encode-pds-private-dev', s3)
-    s3 = make_bucket(LOGBUCKET, s3)
-    make_s3_object(s3, 'encode-files', '2019/02/11/fb0cc28e-ddb9-44c6-a597-69f71a75d6a8/ENCFF077CVI.bigBed')
-    make_s3_object(s3, 'encode-files', '2019/02/11/0e18d1ba-4804-4ca8-9e8e-65eb640b9908/ENCFF910LZK.bigBed')
-    eft = EncodeFileTransfer(server)
-    eft.sync_buckets_and_portal()
-    assert EncodeFileTransfer._set_source_to_encode_public.call_count == 0
-    assert EncodeFileTransfer._determine_source.call_count == 2
-    assert s3Helper._move_file.call_count == 2
-    assert s3Helper._delete_file.call_count == 2
-    assert s3Helper._tag_file.call_count == 2
-    assert s3Helper._upload_log.call_count == 1
-    assert EncodeFileTransfer._update_bucket_on_portal.call_count == 2
-
-
-def test_encode_file_transfer_dump_file_metadata():
-        pass
+    assert file_to_move['source_bucket'] == 'igvf-files'

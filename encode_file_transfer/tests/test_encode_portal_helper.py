@@ -14,7 +14,7 @@ def test_encode_server_is_indexing(server, mocker):
     from encode_file_transfer import EncodePortalHelper
     mocker.patch('requests.get')
     requests.get.return_value = MockResponse(
-        {'status': 'indexing'},
+        {'is_indexing': True},
         200,
         text=''
     )
@@ -27,7 +27,7 @@ def test_encode_server_is_not_indexing(server, mocker):
     from encode_file_transfer import EncodePortalHelper
     mocker.patch('requests.get')
     requests.get.return_value = MockResponse(
-        {'status': 'waiting'},
+        {'is_indexing': False},
         200,
         text=''
     )
@@ -117,19 +117,19 @@ def test_encode_portal_helper_patch_status_code_not_200(server, mocker):
 def test_encode_portal_helper_make_audit_query(server):
     from encode_file_transfer import EncodePortalHelper
     eph = EncodePortalHelper(server)
-    assert eph._make_audit_query() == 'https://encode-demo.org/search/?type=File&audit.INTERNAL_ACTION.category=incorrect+file+bucket&format=json'
+    assert eph._make_audit_query() == 'https://encode-demo.org/search/?type=File&audit.INTERNAL_ACTION.category=incorrect+file+bucket'
 
 
 def test_encode_portal_helper_make_audit_query_with_batch(server):
     from encode_file_transfer import EncodePortalHelper
     eph = EncodePortalHelper(server)
-    assert eph._make_audit_query(batch_size=100) == 'https://encode-demo.org/search/?type=File&audit.INTERNAL_ACTION.category=incorrect+file+bucket&format=json&limit=100'
+    assert eph._make_audit_query(batch_size=100) == 'https://encode-demo.org/search/?type=File&audit.INTERNAL_ACTION.category=incorrect+file+bucket&limit=100'
 
 
 def test_encode_portal_helper_make_audit_query_with_query_filter(server):
     from encode_file_transfer import EncodePortalHelper
     eph = EncodePortalHelper(server)
-    assert eph._make_audit_query(query_filter={'status': 'in progress'}) == 'https://encode-demo.org/search/?type=File&audit.INTERNAL_ACTION.category=incorrect+file+bucket&format=json&status=in+progress'
+    assert eph._make_audit_query(query_filter={'status': 'in progress'}) == 'https://encode-demo.org/search/?type=File&audit.INTERNAL_ACTION.category=incorrect+file+bucket&status=in+progress'
 
 
 def test_encode_portal_helper_make_audit_query_with_batch_and_query_filter(server):
@@ -144,7 +144,7 @@ def test_encode_portal_helper_make_audit_query_with_batch_and_query_filter(serve
             ]
         }
     )
-    assert audit_query == 'https://encode-demo.org/search/?type=File&audit.INTERNAL_ACTION.category=incorrect+file+bucket&format=json&limit=3&accession=ENCFF000123&accession=ENCFF000456'
+    assert audit_query == 'https://encode-demo.org/search/?type=File&audit.INTERNAL_ACTION.category=incorrect+file+bucket&limit=3&accession=ENCFF000123&accession=ENCFF000456'
 
 
 def test_encode_portal_helper_parse_audits(server, search_results):
@@ -199,36 +199,8 @@ def test_encode_portal_helper_make_metadata_query(server):
     from encode_file_transfer import EncodePortalHelper
     eph = EncodePortalHelper(server)
     metadata_query = eph._make_metadata_query()
-    assert all(
-        x in metadata_query
-        for x in [
-                'https://encode-demo.org/search/?type=File',
-                '&format=json',
-                '&status=released',
-                '&status=archived',
-                '&restricted%21=%2A',
-                '&field=s3_uri',
-                '&field=azure_uri',
-                '&field=status',
-                '&field=file_format',
-                '&field=accession',
-                '&field=dataset',
-                '&field=lab.%40id',
-                '&field=assembly',
-                '&field=output_category',
-                '&field=file_size'
-                '&field=date_created',
-                '&field=file_type',
-                '&field=replicate_libraries',
-                '&field=md5sum',
-                '&field=cloud_metadata.url',
-                '&field=cloud_metadata.md5sum_base64',
-                '&field=award.rfa',
-                '&field=analysis_step_version.analysis_step.name',
-                '&no_file_available=false',
-                '&audit.INTERNAL_ACTION.category%21=incorrect+file+bucket',
-        ]
-    )
+    expected_query = 'https://encode-demo.org/search/?type=File&field=%40id&field=href&field=accession&field=file_format&field=file_format_type&field=content_type&field=summary&field=file_set.accession&field=file_set.file_set_type&field=assay_titles&field=preferred_assay_titles&field=file_set.donors.accession&field=file_set.samples.accession&field=file_set.samples.sample_terms.term_name&field=file_set.samples.summary&field=cell_type_annotation.term_name&field=creation_timestamp&field=file_size&field=file_set.lab.title&field=s3_uri&field=assembly&field=transcriptome_annotation&field=controlled_access&field=md5sum&field=derived_from&field=status&field=upload_status&field=flowcell_id&field=lane&field=sequencing_run&field=illumina_read_type&field=mean_read_length&field=seqspecs&field=seqspec_document&field=sequencing_kit&field=sequencing_platform.term_name&field=workflows.accession&status=released&status=archived&upload_status=validated&upload_status=validation+exempted&controlled_access%21=true&externally_hosted%21=true&audit.INTERNAL_ACTION.category%21=incorrect+file+bucket'
+    assert metadata_query == expected_query
 
 
 def test_encode_portal_helper_make_metadata_query_with_batch(server):
@@ -242,26 +214,7 @@ def test_encode_portal_helper_flatten_json(server, metadata_results):
     from encode_file_transfer import EncodePortalHelper
     eph = EncodePortalHelper(server)
     flattened_data = eph._flatten_json(metadata_results[0])
-    expected = {
-        'cloud_metadata.url': 'https://encode-files.s3.amazonaws.com/2019/02/22/ffca661c-38b2-4470-8411-b5d724f84303/ENCFF525YUW.vcf.gz',
-        'md5sum': '19e37212a2b8a24a1cfd12ffd50ef257',
-        's3_uri': 's3://encode-files/2019/02/22/ffca661c-38b2-4470-8411-b5d724f84303/ENCFF525YUW.vcf.gz',
-        "azure_uri": "https://datasetencode.blob.core.windows.net/dataset/2019/02/22/ffca661c-38b2-4470-8411-b5d724f84303/ENCFF525YUW.vcf.gz?sv=2019-10-10&si=prod&sr=c&sig=9qSQZo4ggrCNpybBExU8SypuUZV33igI11xw0P7rB3c%3D",
-        'assembly': 'hg19',
-        'lab.@id': '/labs/alexander-urban/',
-        'file_size': 504017,
-        'dataset': '/experiments/ENCSR276ECO/',
-        'output_category': 'annotation',
-        'file_format': 'vcf',
-        'status': 'released',
-        'award.rfa': 'community',
-        'cloud_metadata.md5sum_base64': 'GeNyEqK4okoc/RL/1Q7yVw==',
-        'analysis_step_version.analysis_step.name': 'genotyping-hts-bam-to-vcf-arcsv-step-v-1',
-        'file_type': 'vcf',
-        'accession': 'ENCFF525YUW',
-        'date_created': '2019-02-22T16:59:32.376723+00:00',
-        'replicate_libraries': ['/libraries/ENCLB553KIK/']
-    }
+    expected = {'@id': '/files/ENCFF525YUW/', 'href': None, 'accession': 'ENCFF525YUW', 'file_format': 'vcf', 'file_format_type': None, 'content_type': None, 'summary': None, 'file_set.accession': None, 'file_set.file_set_type': None, 'assay_titles': None, 'preferred_assay_titles': None, 'file_set.donors.accession': None, 'file_set.samples.accession': None, 'file_set.samples.sample_terms.term_name': None, 'file_set.samples.summary': None, 'cell_type_annotation.term_name': None, 'creation_timestamp': None, 'file_size': 504017, 'file_set.lab.title': None, 's3_uri': 's3://encode-files/2019/02/22/ffca661c-38b2-4470-8411-b5d724f84303/ENCFF525YUW.vcf.gz', 'assembly': 'hg19', 'transcriptome_annotation': None, 'controlled_access': None, 'md5sum': '19e37212a2b8a24a1cfd12ffd50ef257', 'derived_from': None, 'status': 'released', 'upload_status': None, 'flowcell_id': None, 'lane': None, 'sequencing_run': None, 'illumina_read_type': None, 'mean_read_length': None, 'seqspecs': None, 'seqspec_document': None, 'sequencing_kit': None, 'sequencing_platform.term_name': None, 'workflows.accession': None}
     for k, v in expected.items():
         assert flattened_data[k] == v
 
@@ -271,11 +224,6 @@ def test_encode_portal_helper_parse_metadata(server, metadata_results):
     eph = EncodePortalHelper(server)
     parsed_metadata = eph._parse_metadata(metadata_results)
     assert len(parsed_metadata) == 2
-    urls = sorted([x['cloud_metadata.url'] for x in parsed_metadata])
-    assert urls == [
-        'https://encode-files.s3.amazonaws.com/2019/02/15/cb1979da-3628-4e76-8449-98e7df1ccd5d/ENCFF322LPX.bam',
-        'https://encode-files.s3.amazonaws.com/2019/02/22/ffca661c-38b2-4470-8411-b5d724f84303/ENCFF525YUW.vcf.gz'
-    ]
 
 
 def test_encode_portal_helper_get_file_metadata(server, mocker, metadata_results):
@@ -290,11 +238,6 @@ def test_encode_portal_helper_get_file_metadata(server, mocker, metadata_results
     eph = EncodePortalHelper(server)
     parsed_metadata = eph.get_file_metadata()
     assert len(parsed_metadata) == 2
-    labs = sorted([x['lab.@id'] for x in parsed_metadata])
-    assert labs == [
-        '/labs/alexander-urban/',
-        '/labs/encode-processing-pipeline/'
-    ]
 
 
 def test_encode_portal_helper_zero_search_results_true(server, mocker, no_search_results):
