@@ -15,8 +15,6 @@ from .interface import (
     PUBLIC_BUCKET,
     BATCH_SIZE,
     LOGFILE,
-    LOGBUCKET,
-    LOGFOLDER,
     METADATA_TSV,
     GLACIER_TAG_SET
 )
@@ -26,8 +24,8 @@ from .portal import EncodePortalHelper
 def logger(filename):
     log = logging.getLogger()
     log.setLevel(logging.WARN)
-    log.addHandler(logging.StreamHandler())
-    log.addHandler(logging.FileHandler(filename))
+#    log.addHandler(logging.StreamHandler())
+#    log.addHandler(logging.FileHandler(filename))
     return log
 
 
@@ -130,18 +128,6 @@ class s3Helper():
             Bucket=sb,
             Key=sk,
             Tagging=GLACIER_TAG_SET
-        )
-        return True
-
-    def _upload_log(self, locallog):
-        log.warning('Uploading logs {}'.format(locallog))
-        session = self._get_session()
-        s3 = session.resource('s3')
-        s3.meta.client.upload_file(
-            locallog,
-            LOGBUCKET,
-            '/'.join([LOGFOLDER, locallog]),
-            ExtraArgs={'ACL': 'bucket-owner-full-control'}
         )
         return True
 
@@ -342,5 +328,5 @@ class EncodeFileTransfer():
             log.exception('Exception on {}'.format(f))
             raise
         finally:
-            self.s3h._upload_log(LOGFILE)
+            print('Done')
         return True

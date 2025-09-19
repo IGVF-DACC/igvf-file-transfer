@@ -12,11 +12,11 @@ from .interface import (
     AUDIT_TYPE,
     AUDIT_CATEGORY,
     INDEXER,
-    INDEXING_STATUS,
     SPLITQUERYTEMPLATE,
     FILE_METADATA_QUERY_TEMPLATE,
     FILE_METADATA_FIELDS,
     FILE_METADATA_STATUSES,
+    FILE_METADATA_UPLOAD_STATUSES,
 )
 
 
@@ -32,6 +32,7 @@ class EncodePortalHelper():
         self.query_filter = kwargs.get('query_filter')
         self.file_metadata_fields = kwargs.get('fields', FILE_METADATA_FIELDS)
         self.file_metadata_statuses = kwargs.get('statuses', FILE_METADATA_STATUSES)
+        self.file_metadata_upload_statuses = kwargs.get('upload_statuses', FILE_METADATA_UPLOAD_STATUSES)
 
     @staticmethod
     def _zero_search_results(r):
@@ -121,22 +122,35 @@ class EncodePortalHelper():
                 {
                     'field': self.file_metadata_fields,
                     'status': self.file_metadata_statuses,
-                    'restricted!': '*',
-                    'no_file_available': 'false',
-                    'audit.INTERNAL_ACTION.category!': 'incorrect file bucket',
+                    'upload_status': self.file_metadata_upload_statuses,
+                    'controlled_access!': 'true',
+                    'externally_hosted!': 'true',
+                    #'audit.INTERNAL_ACTION.category!': 'incorrect file bucket',
                 },
                 doseq=True
             )
         )
         return urlunsplit(tuple(metadata_query))
 
+    def _flatten_list(self, values):
+        if isinstance(values, list):
+            for value in values:
+                yield from self._flatten_list(value)
+        else:
+            yield values
+
     def _flatten_json(self, data):
+        print('flattening data')
         flattened_data = {}
         for field in self.file_metadata_fields:
             path = field.split('.')
             v = data
             for p in path:
-                v = v.get(p)
+                if isinstance(v, list):
+                    v = list(self._flatten_list([x.get(p) for x in v]))
+                    print(p, path, v)
+                else:
+                    v = v.get(p)
                 if not v:
                     break
             flattened_data[field] = v
@@ -161,7 +175,7 @@ class EncodePortalHelper():
 
     def is_indexing(self):
         r = self._get(urljoin(self.server, INDEXER))
-        return r.json().get('status') == INDEXING_STATUS
+        return r.json().get('is_indexing') is True
 
     def get_files_in_incorrect_bucket(self):
         file_audit_query = self._make_audit_query(self.batch_size, self.query_filter)

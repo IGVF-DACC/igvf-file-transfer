@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='encode_file_transfer',
-    version='0.0.2',
+    version='2.0.0',
     description='Sync private/public files on ENCODE portal with private/public s3 buckets.',
     url='https://github.com/ENCODE-DCC/devops/packages/encode_file_transfer',
     author='Keenan Graham',
