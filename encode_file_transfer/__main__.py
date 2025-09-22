@@ -8,20 +8,7 @@ from encode_file_transfer.interface import (
     DEFAULT_MAIN_ARG
 )
 import sys
-
-
-def get_encrypted_parameter(name):
-    ssm = boto3.client('ssm', region_name=AWS_DEFAULT_REGION)
-    res = ssm.get_parameter(Name=name, WithDecryption=True)
-    return res.get('Parameter', {}).get('Value')
-
-
-def get_portal_creds():
-    return eval(get_encrypted_parameter(PORTAL_CREDS))
-
-
-def get_aws_creds():
-    return eval(get_encrypted_parameter(AWS_CREDS))
+import os
 
 
 def get_run_type():
@@ -40,8 +27,8 @@ def main():
     eft = EncodeFileTransfer(
         SERVER,
         batch_size='all',
-        portal_creds=portal_creds,
-        aws_creds=aws_creds,
+        portal_creds=(os.environ['PORTAL_KEY'], os.environ['PORTAL_SECRET_KEY']),
+        aws_creds=(os.environ['ACCESS_KEY'], os.environ['SECRET_ACCESS_KEY']),
     )
     if run_type == 'sync':
         eft.sync_buckets_and_portal()
