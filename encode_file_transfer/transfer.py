@@ -299,8 +299,8 @@ class EncodeFileTransfer():
         '''
         Pull files with incorrect bucket audit.
         '''
-        if not self._wait_for_indexer():
-            return False
+        #if not self._wait_for_indexer():
+        #    return False
         files_to_move = self._get_files_to_move()
         try:
             for i, f in enumerate(files_to_move):

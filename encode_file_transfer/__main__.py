@@ -22,8 +22,6 @@ def get_run_type():
 def main():
     run_type = get_run_type()
     print('Running as {}'.format(run_type))
-    portal_creds = get_portal_creds()
-    aws_creds = get_aws_creds()
     eft = EncodeFileTransfer(
         SERVER,
         batch_size='all',
