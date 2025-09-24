@@ -68,7 +68,10 @@ def get_args():
 
 def main():
     args = get_args()
-    print('Args', args)
+    for key, value in vars(args).items():
+        if 'key' in key or 'secret' in key:
+            continue
+        print(key, value)
     run_type = args.run_type
     print('Running as {}'.format(run_type))
     eft = EncodeFileTransfer(
