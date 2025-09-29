@@ -23,8 +23,8 @@ AUDIT_TYPE = 'INTERNAL_ACTION'
 AUDIT_CATEGORY = 'incorrect file bucket'
 BATCH_SIZE = 10
 LOGFILE = 'transfer_log_{}.txt'
-METADATA_TSV = os.path.expanduser('~/igvf_file_manifest.tsv')
-
+METADATA_TSV = 'igvf_file_manifest.tsv'
+LOCAL_METADATA_TSV = os.path.expanduser(f'~/{METADATA_TSV}')
 FILE_METADATA_FIELDS = [
     '@id',
     'href',

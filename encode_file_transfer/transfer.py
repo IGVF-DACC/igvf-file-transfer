@@ -16,6 +16,7 @@ from .interface import (
     BATCH_SIZE,
     LOGFILE,
     METADATA_TSV,
+    LOCAL_METADATA_TSV,
     GLACIER_TAG_SET
 )
 from .portal import EncodePortalHelper
@@ -135,7 +136,7 @@ class s3Helper():
         )
         return True
 
-    def _upload_file_metadata(self, localmanifest=METADATA_TSV):
+    def _upload_file_metadata(self, localmanifest=LOCAL_METADATA_TSV):
         log.warning('Uploading file manifest {} to s3'.format(localmanifest))
         session = self._get_session()
         s3 = session.resource('s3')
@@ -291,7 +292,7 @@ class EncodeFileTransfer():
         parsed_metadata = self.eph.get_file_metadata()
         self._make_metadata_tsv(
             parsed_metadata,
-            METADATA_TSV
+            LOCAL_METADATA_TSV
         )
         self.s3h._upload_file_metadata()
 
