@@ -1,3 +1,5 @@
+import os
+
 SERVER = 'https://api.data.igvf.org'
 PORTAL_CREDS = 'igvf-file-transfer-portal-creds'
 DEFAULT_MAIN_ARG = 'sync'
@@ -21,7 +23,7 @@ AUDIT_TYPE = 'INTERNAL_ACTION'
 AUDIT_CATEGORY = 'incorrect file bucket'
 BATCH_SIZE = 10
 LOGFILE = 'transfer_log_{}.txt'
-METADATA_TSV = 'igvf_file_manifest.tsv'
+METADATA_TSV = os.path.expanduser('~/igvf_file_manifest.tsv')
 
 FILE_METADATA_FIELDS = [
     '@id',
