@@ -140,7 +140,6 @@ class EncodePortalHelper():
             yield values
 
     def _flatten_json(self, data):
-        print('flattening data')
         flattened_data = {}
         for field in self.file_metadata_fields:
             path = field.split('.')
@@ -148,7 +147,6 @@ class EncodePortalHelper():
             for p in path:
                 if isinstance(v, list):
                     v = list(self._flatten_list([x.get(p) for x in v]))
-                    print(p, path, v)
                 else:
                     v = v.get(p)
                 if not v:
